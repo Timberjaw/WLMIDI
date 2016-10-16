@@ -1,0 +1,160 @@
+<html>
+<head>
+	<title>MIDI</title>
+	<style type="text/css">
+		#status { font-size: 3rem; width: 300px; margin: 0px auto; padding-top: 3rem; text-align: center; }
+		#lastNote { font-size: 2rem; width: 300px; margin: 0px auto; padding-top: 1rem; text-align: center; }
+		.good { color: green; }
+		.bad { color: red; }
+	</style>
+	<script src="smfParser.js"></script>
+	<script src="smfPlayer.js"></script>
+</head>
+<body>
+	<div id="status"></div>
+	<div id="lastNote"></div>
+	<script type="text/javascript">
+	var puzzle = {
+		"sequence":[60,61,62,64],
+		"sequenceFriendly":[],
+		"index":0,
+		"victory":atob("TVRoZAAAAAYAAQAJAPBNVHJrAAAAEwD/WAQEAhgIAP9RAwtxsAD/LwBNVHJrAAAARwD/AwlQYW4gRmx1dGUAwEsAsHsAAJBFfzyARQAAkEZ/PIBGAACQR388gEcAAJBIf4IsgEgAg2CwB38AC0EAewAAfgAA/y8ATVRyawAAAEYA/wMIUmVjb3JkZXIAwUoAsQd/AHsAAJE8fzyBPAAAkT1/PIE9AACRPn88gT4AAJE/f4IsgT8Ag2CxC0EAewAAfgAA/y8ATVRyawAAAEUA/wMKVm9pY2UgT29ocwDCNQCyB38AewAAkjV/PII1AACSNn88gjYAAJI3fzyCNwAAkjh/gmiCOACDJLJ7AAB+AAD/LwBNVHJrAAAAowD/AxFTdHJpbmcgRW5zZW1ibGUgMQDDMACzB1kAewAAewAAewAAewAAk0V/ADl/AFF/PINRAAA5AABFAACTUn8ARn8AOn88gzoAAEYAAFIAAJNTfwBHfwA7fzyDOwAARwAAUwAAk1R/AEh/ADx/giyDPAAASAAAVACDYLMLQQB7AAB+AAALQQB7AAB+AAALQQB7AAB+AAALQQB7AAB+AAD/LwBNVHJrAAAAbwD/Aw1CcmFzcyBTZWN0aW9uAMQ9ALQHWQB7AAB7AACUPH8AMH88hDAAADwAAJQxfwA9fzyEPQAAMQAAlDJ/AD5/PIQ+AAAyAACUM38AP3+CLIQ/AAAzAINgtAtBAHsAAH4AAAtBAHsAAH4AAP8vAE1UcmsAAABHAP8DDFJob2RlcyBQaWFubwDFBAC1B38AewAAlTV/PIU1AACVNn88hTYAAJU3fzyFNwAAlTh/gmiFOACDJLV7AAB+AAD/LwBNVHJrAAAAGwD/AxNUaGUgTGVnZW5kIG9mIFplbGRhAP8vAE1UcmsAAAAQAP8DCEtvbmNoYW5vAP8vAA==")
+	};
+	
+	for(var s in puzzle.sequence) { puzzle.sequenceFriendly.push(pitchToNote(puzzle.sequence[s])); }
+	
+	var midi = null;  // global MIDIAccess object
+
+	function onMIDISuccess( midiAccess ) {
+	  console.log( "MIDI ready!" );
+	  midi = midiAccess;  // store in the global (in real usage, would probably keep in an object instance)
+	  
+	  // Listen for keys
+	  startLoggingMIDIInput(midi, 0);
+	}
+
+	function onMIDIFailure(msg) {
+	  console.log( "Failed to get MIDI access - " + msg );
+	}
+	
+	function listInputsAndOutputs( midiAccess ) {
+		for (var entry of midiAccess.inputs) {
+			var input = entry[1];
+			console.log( "Input port [type:'" + input.type + "'] id:'" + input.id +
+			  "' manufacturer:'" + input.manufacturer + "' name:'" + input.name +
+			  "' version:'" + input.version + "'" );
+		}
+
+		for (var entry of midiAccess.outputs) {
+			var output = entry[1];
+			console.log( "Output port [type:'" + output.type + "'] id:'" + output.id +
+			  "' manufacturer:'" + output.manufacturer + "' name:'" + output.name +
+			  "' version:'" + output.version + "'" );
+		}
+	}
+	
+	function onMIDIMessage( event ) {
+	  var str = "MIDI message received at timestamp " + event.timestamp + "[" + event.data.length + " bytes]: ";
+	  for (var i=0; i<event.data.length; i++) {
+		str += "0x" + event.data[i].toString(16) + " ";
+	  }
+	  console.log( str );
+	  
+	  MIDIMessageEventHandler( event );
+	}
+	
+	function MIDIMessageEventHandler(event) {
+      // Mask off the lower nibble (MIDI channel, which we don't care about)
+      switch (event.data[0] & 0xf0) {
+        case 0x90:
+          if (event.data[2]!=0) {  // if velocity != 0, this is a note-on message
+            noteOn(event.data[1]);
+            return;
+          }
+          // if velocity == 0, fall thru: it's a note-off.  MIDI's weird, y'all.
+        case 0x80:
+          noteOff(event.data[1]);
+          return;
+      }
+    }
+	
+	function frequencyFromNoteNumber( note ) {
+      return 440 * Math.pow(2,(note-69)/12);
+    }
+
+    function noteOn(noteNumber) {
+    }
+
+    function noteOff(noteNumber) {
+      checkSequence(noteNumber);
+	  document.getElementById('lastNote').innerHTML = pitchToNote(noteNumber);
+    }
+	
+	function checkSequence(noteNumber) {
+		if(puzzle.index >= puzzle.sequence.length) { puzzle.index = 0; }
+		
+		var next = puzzle.sequence[puzzle.index];
+		
+		if(noteNumber == next) {
+			puzzle.index++;
+			document.getElementById('lastNote').className = 'good';
+		} else {
+			puzzle.index = 0;
+			document.getElementById('lastNote').className = 'bad';
+		}
+		
+		updateDisplay();
+	}
+	
+	function updateDisplay() {
+		// TODO
+		document.getElementById('status').innerHTML = puzzle.sequenceFriendly.slice(0, puzzle.index);
+		
+		if(puzzle.index == puzzle.sequence.length) {
+			document.getElementById('status').innerHTML += " OK";
+		}
+		
+		if(puzzle.index == 0) {
+			document.getElementById('status').innerHTML = "Failed";
+		}
+	}
+	
+	function pitchToNote( noteNumber ) {
+		var relativeNote = noteNumber - 21; // A1 = 21
+		var base = ['A','A','B','C','C','D','D','E','F','F','G','G'];
+		var sharps = [1,4,6,9,11];
+		
+		var number = Math.floor(relativeNote / 12) + 1;
+		var note = base[relativeNote % 12];
+		var sharp = sharps.indexOf(relativeNote % 12) > -1;
+		
+		return note + number + (sharp ? '#' : '');
+	}
+
+	function startLoggingMIDIInput( midiAccess, indexOfPort ) {
+	  midiAccess.inputs.forEach( function(entry) {entry.onmidimessage = onMIDIMessage;});
+	}
+	
+	function sendMiddleC( midiAccess, portID ) {
+	  var noteOnMessage = [0x90, 60, 0x7f];    // note on, middle C, full velocity
+	  var output = midiAccess.outputs.get(portID);
+	  output.send( noteOnMessage );  //omitting the timestamp means send immediately.
+	  output.send( [0x80, 60, 0x40], window.performance.now() + 1000.0 ); // Inlined array creation- note off, middle C,  
+																		  // release velocity = 64, timestamp = now + 1000ms.
+	}
+	
+	function playMusic() {
+		output = midi.outputs.values().next().value;
+		if (!output) { console.log("Uh oh! Couldn't get i/o ports."); }
+	  
+		var smfParser=new SmfParser();
+		var parsedSmf = smfParser.parse( puzzle.victory );
+		var smfPlayer=new SmfPlayer(output);
+		smfPlayer.init( parsedSmf, 0, 0 );
+		smfPlayer.startPlay();
+	}
+
+	navigator.requestMIDIAccess({ sysex: true }).then( onMIDISuccess, onMIDIFailure );
+	</script>
+</body>
+</html>
