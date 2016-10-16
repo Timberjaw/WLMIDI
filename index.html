@@ -23,6 +23,13 @@
 	
 	for(var s in puzzle.sequence) { puzzle.sequenceFriendly.push(pitchToNote(puzzle.sequence[s])); }
 	
+	var chInfo=[
+		{"on":true}, {"on":true}, {"on":true}, {"on":true},
+		{"on":true}, {"on":true}, {"on":true}, {"on":true},
+		{"on":true}, {"on":true}, {"on":true}, {"on":true},
+		{"on":true}, {"on":true}, {"on":true}, {"on":true}
+	];
+	
 	var midi = null;  // global MIDIAccess object
 
 	function onMIDISuccess( midiAccess ) {
