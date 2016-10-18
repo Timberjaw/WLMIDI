@@ -166,8 +166,7 @@ SmfPlayer.prototype={
                 }
                 break;
               case "channel":
-				if(event.subType=="noteOn") {
-					console.log("rewrote velocity from " + event.raw[2] + " to " + Math.floor( event.raw[2] * this.volume ));
+				if(event.subtype=="noteOn") {
 					event.raw[2] = Math.floor( event.raw[2] * this.volume );
 				}
               case "sysEx":
@@ -246,7 +245,7 @@ SmfPlayer.prototype={
                 return;
             }
         }
-        this.mOut.send(msg, time+this.latency);
+        //this.mOut.send(msg, time+this.latency);
     },
 
 	  startPlay: function () {
