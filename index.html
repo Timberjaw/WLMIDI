@@ -112,7 +112,7 @@
 		  position: absolute;
 		  left: 50%;
 		  margin-left: -20%;
-		  top: 100%;
+		  top: 95%;
 		  background-color: inherit;
 		}
 	</style>
@@ -168,21 +168,29 @@
 	var puzzle = {
 		"sequence":[66,72,64,60,61,64,67,83],
 		"sequenceFriendly":[],
+		"animating":false,
 		"index":0,
 		"activeNotes":[],
-		"chordNotes":[60,61,62],
+		"chordNotes":[61,64,67],
 		"step":0, // which step is active
 		"step1Delay":3,
 		"setStep":function(n) {
-			this.step = n;
-			
 			// Hide all steps
-			$('.step').each(function(){$(this).hide();});
-			$('#step'+n).fadeIn('fast');
+			$('.step').not('#step'+n).each(function(){$(this).hide();});
+			
+			if(!this.animating || this.step != n) {
+				$('#step'+n).fadeIn('fast');
+			}
+			
+			this.step = n;
 			
 			switch(n){
 				case 1:
-					$('#step1').delay(1000).fadeOut('slow');
+					var self = this;
+					if(!this.animating) {
+						this.animating = true;
+						$('#step1').delay(1000).fadeOut('slow', function(){ self.animating = false; });
+					}
 				break;
 				case 2:
 				
@@ -300,10 +308,16 @@
 			
 			$('#grid'+puzzle.index).addClass('active');
 		} else {
-			$("#step2").shake({
-				direction: "right",
-				distance: 20
-			});
+			if(!puzzle.animating) {
+				puzzle.animating = true;
+				$("#step2").shake({
+					direction: "right",
+					distance: 20,
+					callback: function(){
+						puzzle.animating = false;
+					}
+				});
+			}
 		
 			puzzle.index = 0;
 			document.getElementById('lastNote').className = 'bad';
