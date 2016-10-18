@@ -15,9 +15,10 @@ var SmfPlayer = function(output) {
 };
 
 SmfPlayer.prototype={
-    init: function(midiFile, latency, eventNo) {
+    init: function(midiFile, latency, eventNo, volume) {
         this.midiFile=midiFile;
         this.latency=latency;
+		this.volume=volume;
 
         this.trackStates = [];
 	      this.beatsPerMinute = 120;
@@ -165,6 +166,10 @@ SmfPlayer.prototype={
                 }
                 break;
               case "channel":
+				if(event.subType=="noteOn") {
+					console.log("rewrote velocity from " + event.raw[2] + " to " + Math.floor( event.raw[2] * this.volume ));
+					event.raw[2] = Math.floor( event.raw[2] * this.volume );
+				}
               case "sysEx":
               case "dividedSysEx":
                 var sendFl=true;
