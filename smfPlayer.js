@@ -245,7 +245,7 @@ SmfPlayer.prototype={
                 return;
             }
         }
-        //this.mOut.send(msg, time+this.latency);
+        this.mOut.send(msg, time+this.latency);
     },
 
 	  startPlay: function () {
