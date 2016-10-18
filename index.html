@@ -15,7 +15,7 @@
 	<div id="lastNote"></div>
 	<script type="text/javascript">
 	var puzzle = {
-		"sequence":[60,61,62,64],
+		"sequence":[66,72,64,60,61,64,67,83],
 		"sequenceFriendly":[],
 		"index":0,
 		"victory":atob("TVRoZAAAAAYAAQAJAPBNVHJrAAAAEwD/WAQEAhgIAP9RAwtxsAD/LwBNVHJrAAAARwD/AwlQYW4gRmx1dGUAwEsAsHsAAJBFfzyARQAAkEZ/PIBGAACQR388gEcAAJBIf4IsgEgAg2CwB38AC0EAewAAfgAA/y8ATVRyawAAAEYA/wMIUmVjb3JkZXIAwUoAsQd/AHsAAJE8fzyBPAAAkT1/PIE9AACRPn88gT4AAJE/f4IsgT8Ag2CxC0EAewAAfgAA/y8ATVRyawAAAEUA/wMKVm9pY2UgT29ocwDCNQCyB38AewAAkjV/PII1AACSNn88gjYAAJI3fzyCNwAAkjh/gmiCOACDJLJ7AAB+AAD/LwBNVHJrAAAAowD/AxFTdHJpbmcgRW5zZW1ibGUgMQDDMACzB1kAewAAewAAewAAewAAk0V/ADl/AFF/PINRAAA5AABFAACTUn8ARn8AOn88gzoAAEYAAFIAAJNTfwBHfwA7fzyDOwAARwAAUwAAk1R/AEh/ADx/giyDPAAASAAAVACDYLMLQQB7AAB+AAALQQB7AAB+AAALQQB7AAB+AAALQQB7AAB+AAD/LwBNVHJrAAAAbwD/Aw1CcmFzcyBTZWN0aW9uAMQ9ALQHWQB7AAB7AACUPH8AMH88hDAAADwAAJQxfwA9fzyEPQAAMQAAlDJ/AD5/PIQ+AAAyAACUM38AP3+CLIQ/AAAzAINgtAtBAHsAAH4AAAtBAHsAAH4AAP8vAE1UcmsAAABHAP8DDFJob2RlcyBQaWFubwDFBAC1B38AewAAlTV/PIU1AACVNn88hTYAAJU3fzyFNwAAlTh/gmiFOACDJLV7AAB+AAD/LwBNVHJrAAAAGwD/AxNUaGUgTGVnZW5kIG9mIFplbGRhAP8vAE1UcmsAAAAQAP8DCEtvbmNoYW5vAP8vAA==")
@@ -119,6 +119,7 @@
 		
 		if(puzzle.index == puzzle.sequence.length) {
 			document.getElementById('status').innerHTML += " OK";
+			playMusic();
 		}
 		
 		if(puzzle.index == 0) {
@@ -148,6 +149,14 @@
 	  output.send( noteOnMessage );  //omitting the timestamp means send immediately.
 	  output.send( [0x80, 60, 0x40], window.performance.now() + 1000.0 ); // Inlined array creation- note off, middle C,  
 																		  // release velocity = 64, timestamp = now + 1000ms.
+	}
+	
+	function setVolume(v) {
+		var volume = Math.floor(v * 16383);
+		var vl = volume & 0x7f; // low bits
+		var vh = volume >> 7; // high bits
+		var cmd = [0xF0, 0x7F, 0x7F, 0x04, 0x01, vl, vh, 0xF7]; // master volume command
+		output.send(cmd);
 	}
 	
 	function playMusic() {
