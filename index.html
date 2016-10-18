@@ -172,6 +172,7 @@
 		"activeNotes":[],
 		"chordNotes":[60,61,62],
 		"step":0, // which step is active
+		"step1Delay":3,
 		"setStep":function(n) {
 			this.step = n;
 			
@@ -274,9 +275,9 @@
     }
 
     function noteOff(noteNumber) {
-	  if(puzzle.step < 2 && puzzle.activeNotes.length == 0) {
+	  if(puzzle.step < 2 && puzzle.activeNotes.length == 1) {
 		puzzle.setStep(1);
-	  } else if(puzzle.step == 2 && puzzle.activeNotes.length == 0) {
+	  } else if(puzzle.step == 2 && puzzle.activeNotes.length == 1) {
 		checkSequence(noteNumber);
 	  }
 	  
@@ -287,6 +288,7 @@
     }
 	
 	function checkSequence(noteNumber) {
+		if(puzzle.step1Delay > 0) { puzzle.step1Delay--; return; }
 		if(puzzle.index >= puzzle.sequence.length) { puzzle.index = 0; }
 		
 		var next = puzzle.sequence[puzzle.index];
