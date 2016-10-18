@@ -277,7 +277,7 @@
     function noteOff(noteNumber) {
 	  if(puzzle.step < 2 && puzzle.activeNotes.length == 1) {
 		puzzle.setStep(1);
-	  } else if(puzzle.step == 2 && puzzle.activeNotes.length == 1) {
+	  } else if(puzzle.step == 2) {
 		checkSequence(noteNumber);
 	  }
 	  
