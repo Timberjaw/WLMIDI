@@ -156,6 +156,8 @@
 		var vl = volume & 0x7f; // low bits
 		var vh = volume >> 7; // high bits
 		var cmd = [0xF0, 0x7F, 0x7F, 0x04, 0x01, vl, vh, 0xF7]; // master volume command
+		
+		var output = midi.outputs.values().next().value;
 		output.send(cmd);
 	}
 	
